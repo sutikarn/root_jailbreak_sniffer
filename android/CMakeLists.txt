@@ -1,68 +1,37 @@
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
-# Sets the minimum version of CMake required to build the native library.
-
 cmake_minimum_required(VERSION 3.4.1)
 
-#set(can_use_assembler TRUE)
-#enable_language(ASM)
+# ---- เพิ่มธงลิงก์เพื่อรองรับ 16KB page size ----
+# ใช้ตัวแปร linker flags เพราะ CMake 3.4.1 ยังไม่มี target_link_options
+# ใส่ทั้ง shared/module/exe เผื่อทุกกรณี
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384 -fuse-ld=lld")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-z,max-page-size=16384 -fuse-ld=lld")
+set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    -Wl,-z,max-page-size=16384 -fuse-ld=lld")
+# -----------------------------------------------
 
+# (ส่วน ASM/define ถูกคอมเมนต์ไว้ตามไฟล์เดิมของคุณ)
+# set(can_use_assembler TRUE)
+# enable_language(ASM)
+# if(${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "x86")
+#     add_definitions("-D_32_BIT")
+# elseif(${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
+#     add_definitions("-D_64_BIT")
+# endif()
 
-#if(${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "x86")
-#    add_definitions("-D_32_BIT")
-#elseif(${ANDROID_ABI} STREQUAL "arm64-v8a" OR ${ANDROID_ABI} STREQUAL "x86_64")
-#    add_definitions("-D_64_BIT")
-#endif()
-
-# Creates and names a library, sets it as either STATIC
-# or SHARED, and provides the relative paths to its source code.
-# You can define multiple libraries, and CMake builds them for you.
-# Gradle automatically packages shared libraries with your APK.
-
-add_library( # Sets the name of the library.
+add_library(
         native-lib
-
-        # Sets the library as a shared library.
         SHARED
+        ../android/src/main/c/native-lib.c
+)
 
-        # Provides a relative path to your source file(s).
-        ../android/src/main/c/native-lib.c)
-
-
-
-#add_library( # Sets the name of the library.
-       # native-lib2
-
-        # Sets the library as a shared library.
-        #SHARED
-
-        # Provides a relative path to your source file(s).
-        #src/main/c/native-lib2.c)
-
-
-#target_include_directories(native-lib2 PRIVATE arch/${ANDROID_ABI})
-
-# Searches for a specified prebuilt library and stores the path as a
-# variable. Because CMake includes system libraries in the search path by
-# default, you only need to specify the name of the public NDK library
-# you want to add. CMake verifies that the library exists before
-# completing its build.
-
-find_library( # Sets the name of the path variable.
+find_library(
         log-lib
+        log
+)
 
-        # Specifies the name of the NDK library that
-        # you want CMake to locate.
-        log )
-
-# Specifies libraries CMake should link to your target library. You
-# can link multiple libraries, such as libraries you define in this
-# build script, prebuilt third-party libraries, or system libraries.
-
-target_link_libraries( # Specifies the target library.
+target_link_libraries(
         native-lib
-
-        # Links the target library to the log library
-        # included in the NDK.
-        ${log-lib} )
+        ${log-lib}
+)
